@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Benton & Cowles Dosage Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700;900&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1B3A2E;
+    --forest-dark:#0F2119;
+    --forest-light:#2C5240;
+    --parchment:#FFFFFF;
+    --parchment-deep:#EAE0C6;
+    --card:#FFFDF8;
+    --ink:#26261F;
+    --ink-soft:#615E4E;
+    --line:#DCCFA8;
+    --moss:#54724A;
+    --white:#FFFFFF;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(27,58,46,0.08), 0 4px 14px rgba(27,58,46,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--parchment);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(27,58,46,0.06) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  h1,h2,h3{font-family:'Roboto Slab',serif; color:var(--forest-dark); margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  #app{max-width:600px;margin:0 auto;min-height:100vh;background:var(--parchment);display:flex;flex-direction:column;}
+
+  /* ---- Topbar ---- */
+  .topbar{
+    background:linear-gradient(180deg,var(--forest) 0%, var(--forest-dark) 100%);
+    color:var(--parchment);
+    padding:20px 16px;
+    position:sticky;top:0;z-index:20;
+    box-shadow:0 4px 16px rgba(0,0,0,0.18);
+  }
+  .brand{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;}
+  .brand h1{color:var(--white);font-size:26px;line-height:1.2;font-weight:700;font-family:'Roboto Slab',serif;}
+  .brand h3{font-size:16px;color:#B8D8C2;margin:0;font-weight:500;letter-spacing:0.3px;}
+
+  main{flex:1;padding:20px 14px 60px;}
+
+  /* ---- Card ---- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    margin-bottom:20px;
+  }
+
+  .card-title{
+    font-size:16px;font-weight:700;color:var(--forest-dark);
+    text-transform:uppercase;letter-spacing:0.2px;
+    margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--line);
+  }
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+
+  label.flabel{
+    display:block;font-size:14px;font-weight:600;color:var(--forest-dark);
+    margin-bottom:6px;text-transform:uppercase;letter-spacing:0.2px;
+  }
+
+  input[type=number]{
+    width:100%;padding:12px;font-size:16px;font-family:'Inter',sans-serif;
+    border:1.5px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);
+  }
+  input[type=number]:focus{
+    outline:2px solid var(--forest-light);outline-offset:1px;border-color:var(--forest-light);
+  }
+
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.4;}
+
+  /* ---- Result Display ---- */
+  .result-box{
+    background:linear-gradient(135deg, var(--parchment-deep) 0%, #F0E8D8 100%);
+    border:2px solid var(--forest-light);
+    border-radius:8px;padding:20px;text-align:center;
+    margin-top:20px;
+  }
+
+  .result-box .label{
+    font-size:12px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;
+    letter-spacing:0.2px;margin-bottom:8px;
+  }
+
+  .result-box .value{
+    font-size:42px;font-weight:700;color:var(--forest);font-family:'IBM Plex Mono',monospace;
+    margin-bottom:8px;line-height:1;
+  }
+
+  .result-box .unit{
+    font-size:16px;color:var(--forest-light);font-weight:600;margin-bottom:12px;
+  }
+
+  .result-box .formula{
+    font-size:12px;color:var(--ink-soft);font-style:italic;
+    padding-top:12px;border-top:1px solid var(--line);margin-top:12px;
+  }
+
+  /* ---- Size Categories ---- */
+  .size-guide{
+    background:#E8F5E9;border:1.5px solid var(--moss);border-radius:8px;
+    padding:12px;font-size:12px;color:var(--ink);line-height:1.6;
+    margin-bottom:16px;
+  }
+
+  .size-guide strong{color:var(--forest-dark);}
+
+  /* ---- Buttons ---- */
+  button{
+    width:100%;padding:12px;border:none;border-radius:8px;
+    font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;
+    transition:all .2s ease;
+  }
+
+  .btn-calculate{
+    background:var(--forest);color:var(--white);margin-bottom:8px;
+  }
+  .btn-calculate:active{background:var(--forest-dark);}
+
+  .btn-reset{
+    background:var(--parchment-deep);color:var(--forest-dark);border:1.5px solid var(--forest);
+  }
+  .btn-reset:active{background:#E0D8C0;}
+
+  /* ---- Info Banner ---- */
+  .info-banner{
+    background:#E3F2FD;border:1.5px solid #2196F3;border-radius:8px;
+    padding:12px;font-size:12px;color:#1565C0;line-height:1.6;
+    margin-bottom:16px;
+  }
+
+  /* ---- Copy Result ---- */
+  .copy-btn{
+    background:#F5F5F5;border:1.5px solid var(--line);color:var(--ink-soft);
+    font-size:12px;padding:8px;margin-top:12px;font-weight:600;
+  }
+  .copy-btn:active{background:var(--line);}
+
+  .copy-feedback{
+    font-size:11px;color:var(--moss);font-weight:600;margin-top:8px;
+    display:none;
+  }
+
+  /* ---- Reference Table ---- */
+  .reference-section{
+    margin-top:20px;
+  }
+
+  .reference-title{
+    font-size:14px;font-weight:700;color:var(--forest-dark);
+    text-transform:uppercase;letter-spacing:0.2px;margin-bottom:12px;
+  }
+
+  .table-wrapper{
+    overflow-x:auto;
+    border:1px solid var(--line);border-radius:8px;
+  }
+
+  table{
+    width:100%;border-collapse:collapse;font-size:12px;
+  }
+
+  th{
+    background:var(--parchment-deep);color:var(--forest-dark);
+    padding:10px;text-align:left;font-weight:600;border-bottom:1.5px solid var(--line);
+  }
+
+  td{
+    padding:10px;border-bottom:1px solid var(--line);
+  }
+
+  tr:hover{background:#FFFEF0;}
+
+  .mono-text{font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
+  @media (max-width:599px){
+    .topbar{padding:16px 14px;}
+    .brand h1{font-size:22px;}
+    main{padding:16px 12px 60px;}
+    .card{padding:16px;}
+    .result-box .value{font-size:36px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>Forest Health Protection</h1>
+      <h3>Hemlock Treatment</h3>
+    </div>
+  </div>
+
+  <main>
+    <div class="card">
+      <div class="card-title">📊 Dosage Calculator</div>
+
+      <div class="info-banner">
+        <strong>Benton & Cowles Optimized Formula:</strong> Calculates imidacloprid dosage based on hemlock DBH to achieve 5-year HWA protection.
+      </div>
+
+      <div class="size-guide">
+        <strong>Tree Size Categories:</strong><br>
+        • Small: &lt; 12" DBH (30 cm)<br>
+        • Mid-range: 12–25" DBH (30–63 cm)<br>
+        • Large: &gt; 25" DBH (&gt;63 cm)
+      </div>
+
+      <div class="field">
+        <label class="flabel">DBH (Diameter at Breast Height) <span style="color:#BD4515;">*</span></label>
+        <input type="number" id="dbhInput" step="0.1" min="1" max="200" placeholder="Enter DBH in inches">
+        <div class="hint">Measured at 54 inches (4.5 feet) from ground. Example: 18.5</div>
+      </div>
+
+      <div class="result-box" id="resultBox" style="display:none;">
+        <div class="label">Imidacloprid Needed</div>
+        <div class="value" id="resultValue">—</div>
+        <div class="unit">Grams (Active Ingredient)</div>
+        <div class="formula" id="resultFormula"></div>
+        <button class="copy-btn" id="copyBtn">📋 Copy Result</button>
+        <div class="copy-feedback" id="copyFeedback">Copied!</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;">
+        <button class="btn-calculate" id="calculateBtn">Calculate</button>
+        <button class="btn-reset" id="resetBtn">Reset</button>
+      </div>
+    </div>
+
+    <div class="card reference-section">
+      <div class="reference-title">📈 Reference: Example Dosages</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>DBH (inches)</th>
+              <th>DBH (cm)</th>
+              <th>Category</th>
+              <th>Dosage (grams)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="mono-text">10"</span></td>
+              <td>25.4</td>
+              <td>Small</td>
+              <td><span class="mono-text">7.1</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono-text">12"</span></td>
+              <td>30.5</td>
+              <td>Mid</td>
+              <td><span class="mono-text">8.4</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono-text">16.5"</span></td>
+              <td>41.9</td>
+              <td>Mid</td>
+              <td><span class="mono-text">11.8</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono-text">18.5"</span></td>
+              <td>47.0</td>
+              <td>Mid</td>
+              <td><span class="mono-text">15.2</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono-text">22.3"</span></td>
+              <td>56.6</td>
+              <td>Mid</td>
+              <td><span class="mono-text">17.6</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono-text">26"</span></td>
+              <td>66.0</td>
+              <td>Large</td>
+              <td><span class="mono-text">36.6</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono-text">30"</span></td>
+              <td>76.2</td>
+              <td>Large</td>
+              <td><span class="mono-text">42.4</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="background:#F0E8D8;border-color:var(--line);">
+      <div class="card-title" style="margin-bottom:12px;">ℹ️ About This Tool</div>
+      <div style="font-size:12px;line-height:1.6;color:var(--ink-soft);">
+        <p style="margin:0 0 8px 0;">
+          <strong>Benton & Cowles Formula:</strong> Optimized imidacloprid dosages for hemlock woolly adelgid (HWA) treatment based on tree diameter. Expected treatment duration: <strong>5 years</strong> per application.
+        </p>
+        <p style="margin:0;">
+          <strong>No network required.</strong> This calculator works entirely offline. Bookmark this page or save as a web clip for field use.
+        </p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  const dbhInput = document.getElementById('dbhInput');
+  const calculateBtn = document.getElementById('calculateBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultBox = document.getElementById('resultBox');
+  const resultValue = document.getElementById('resultValue');
+  const resultFormula = document.getElementById('resultFormula');
+  const copyBtn = document.getElementById('copyBtn');
+  const copyFeedback = document.getElementById('copyFeedback');
+
+  // Benton & Cowles dosage calculation
+  function calculateDosage(dbhInches){
+    const dbhCm = dbhInches * 2.54;
+    let dosageGrams = 0;
+    let formulaNote = '';
+
+    if(dbhCm < 30){
+      dosageGrams = (dbhCm / 2.5) * 0.7;
+      formulaNote = 'Small tree formula: 0.7g per 2.5cm DBH';
+    } else if(dbhCm <= 63){
+      const slope = (17.6 - 8.4) / (63 - 30);
+      dosageGrams = 8.4 + (dbhCm - 30) * slope;
+      formulaNote = 'Mid-range formula: optimized interpolation';
+    } else {
+      dosageGrams = (dbhCm / 2.5) * 1.4;
+      formulaNote = 'Large tree formula: 1.4g per 2.5cm DBH';
+    }
+
+    return {
+      dosage: dosageGrams.toFixed(1),
+      notes: formulaNote,
+      dbhCm: dbhCm.toFixed(1)
+    };
+  }
+
+  // Calculate on button click
+  calculateBtn.addEventListener('click', function(){
+    const dbh = parseFloat(dbhInput.value);
+    
+    if(!dbh || dbh <= 0){
+      resultBox.style.display = 'none';
+      alert('Please enter a valid DBH (diameter in inches)');
+      return;
+    }
+
+    const result = calculateDosage(dbh);
+    resultValue.textContent = result.dosage;
+    resultFormula.textContent = result.notes + ' (' + result.dbhCm + ' cm)';
+    resultBox.style.display = 'block';
+    copyFeedback.style.display = 'none';
+  });
+
+  // Reset form
+  resetBtn.addEventListener('click', function(){
+    dbhInput.value = '';
+    resultBox.style.display = 'none';
+    copyFeedback.style.display = 'none';
+    dbhInput.focus();
+  });
+
+  // Copy result to clipboard
+  copyBtn.addEventListener('click', function(){
+    const text = resultValue.textContent + ' g';
+    navigator.clipboard.writeText(text).then(() => {
+      copyFeedback.style.display = 'block';
+      setTimeout(() => { copyFeedback.style.display = 'none'; }, 2000);
+    }).catch(() => {
+      alert('Could not copy to clipboard');
+    });
+  });
+
+  // Calculate on Enter key
+  dbhInput.addEventListener('keypress', function(e){
+    if(e.key === 'Enter') calculateBtn.click();
+  });
+
+  // Focus on input on load
+  dbhInput.focus();
+})();
+</script>
+</body>
+</html>
